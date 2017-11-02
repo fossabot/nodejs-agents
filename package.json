@@ -1,0 +1,12 @@
+{
+  "contributors": [
+    "Rafael Willians <me@rwillians.com>"
+  ],
+  "license": "MIT",
+  "engines": [
+    "node >= 7.6.0"
+  ],
+  "dependencies": {
+    "lerna": "^2.5.1"
+  }
+}

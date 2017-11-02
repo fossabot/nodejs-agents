@@ -1,0 +1,21 @@
+{
+  "name": "deep-trace",
+  "version": "1.0.0",
+  "description": "DeepTrace's core module.",
+  "license": "MIT",
+  "contributors": [
+    "Rafael Willians <me@rwillians.com>"
+  ],
+  "main": "index.js",
+  "repository": {
+    "type": "git",
+    "url": "git+ssh://git@github.com:deep-trace/nodejs-plugins.git"
+  },
+  "bugs": {
+    "url": "https://github.com/deep-trace/nodejs-plugins/issues"
+  },
+  "homepage": "https://github.com/deep-trace/nodejs-plugins/tree/master/packages/deep-trace#readme",
+  "engines": [
+    "node >= 7.6.0"
+  ]
+}

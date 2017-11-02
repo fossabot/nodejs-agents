@@ -1,0 +1,9 @@
+coverage
+logs
+node_modules
+*.log
+.DS_Store
+.env
+.node_repl_history
+.nyc_output
+npm-debug.log*
