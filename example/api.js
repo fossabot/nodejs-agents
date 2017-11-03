@@ -11,13 +11,13 @@ const caller = require('./caller')
 const express = require('express')
 const app = express()
 
+app.use(DeepTrace.middleware({ tags: { foo: 'bar' } }))
+
 app.use(
   require('./requests-logger')({
     format: ':method :url :status :res[content-length] - :response-time ms'
   }, process.env.NODE_ENV)
 )
-
-app.use(DeepTrace.middleware())
 
 app.get('/', rescue(async (req, res, next) => {
   await req.$deeptrace.propagate(headers => {
