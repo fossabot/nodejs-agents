@@ -3,7 +3,11 @@
 const url = require('url')
 const axios = require('axios')
 const uuid = require('uuid/v4')
-const lodash = { merge: require('lodash.merge') }
+const _merge = require('lodash.merge')
+const debug = {
+  agent: require('debug')('deeptrace:agent'),
+  middleware: require('debug')('deeptrace:middleware')
+}
 
 /**
  * Intercepts the end of a response then passes its final body to a callback.
@@ -17,26 +21,28 @@ const intercept = (res, fn) => {
   const chunks = []
 
   const normalized = (chunk, encoding) => {
-     if (chunk !== null && !Buffer.isBuffer(chunk) && encoding !== 'buffer') {
-      return encoding
-        ? new Buffer(chunk, encoding)
-        : new Buffer(chunk)
+    if (chunk === null) {
+      return chunk
     }
 
-    return chunk
+    if (Buffer.isBuffer(chunk) || encoding === 'buffer') {
+      return chunk
+    }
+
+    return encoding
+        ? new Buffer(chunk, encoding)
+        : new Buffer(chunk)
   }
 
   res.write = (chunk, encoding) => {
-    chunks.push(normalized(chunk))
-
-    return write.call(res, chunk, encoding)
+    chunks.push( normalized(chunk) )
+    write.call(res, chunk, encoding)
   }
 
   res.end = (chunk, encoding, cb) => {
-    chunks.push(normalized(chunk))
-    fn(Buffer.concat(chunks).toString('utf-8'))
-
-    return end.call(res, chunk, encoding, cb)
+    chunks.push( normalized(chunk) )
+    fn( Buffer.concat(chunks).toString('utf-8') )
+    end.call(res, chunk, encoding, cb)
   }
 }
 
@@ -104,7 +110,7 @@ const extract = {
   })
 }
 
-const collector = {
+const agent = {
   /**
    * Sends the collected information to DeepTrace server.
    * @param  {String} endpoint DeepTrace server's API endpoint.
@@ -115,9 +121,7 @@ const collector = {
   send: async (endpoint, secret, report) => {
     return axios.post(endpoint, report, {
       headers: { Authorization: `Bearer ${secret}` }
-    }).catch(err => {
-      console.error(err)
-    })
+    }).catch(err => { debug.agent(err) })
   }
 }
 
@@ -139,8 +143,9 @@ const hasValidConfiguration = (config) => {
 const Reporter = function Reporter (config, req, res) {
   const report = Object.assign(
     extract.identifiers(req, config.headers),
-    extract.request(req),
+    { request: extract.request(req) },
     { response: {} },
+    { tags: config.tags },
     { startedAt: new Date(), finishedAt: null }
   )
 
@@ -151,9 +156,13 @@ const Reporter = function Reporter (config, req, res) {
     report.finishedAt = new Date()
 
     if (hasValidConfiguration(config)) {
-      collector.send(config.endpoint, config.secret, report)
+      agent.send(config.endpoint, config.secret, report)
     }
   })
+
+  if (!hasValidConfiguration(config)) {
+    debug.middleware('Configurations are not properly setup.')
+  }
 
   this.propagate = (fn) => {
     const headers = extract.propagable(report, config.headers)
@@ -203,7 +212,7 @@ const config = {
    * @return {Object}         Object created from merging default options,
   *                           environment variables and custom options.
    */
-  factory: (options) => require('lodash.merge')({
+  factory: (options) => _merge({
     endpoint: env.get('DEEPTRACE_ENDPOINT'),
     secret: env.get('DEEPTRACE_SECRET'),
     key: '$deeptrace',
@@ -211,6 +220,12 @@ const config = {
       id: env.get('DEEPTRACE_HEADERS_ID', 'DeepTrace-Id'),
       parentId: env.get('DEEPTRACE_HEADERS_PARENT_ID', 'DeepTrace-Parent-Id'),
       contextId: env.get('DEEPTRACE_HEADERS_CONTEXT_ID', 'DeepTrace-Context-Id')
+    },
+    tags: {
+      environment: env.get('NODE_ENV'),
+      service: env.get('DEEPTRACE_SERVICE_NAME'),
+      release: env.get('DEEPTRACE_RELEASE'),
+      commit: env.get('DEEPTRACE_COMMIT')
     }
   }, options)
 }
@@ -230,11 +245,11 @@ const factory = (options = {}) => {
  * @return {Function}       Middleware function.
  */
 const middleware = (options = {}) => {
-  options = config.factory(options)
-  const deeptrace = new DeepTrace(options)
+  const cfg = config.factory(options)
+  const deeptrace = new DeepTrace(cfg)
 
   return (req, res, next) => {
-    req[options.key] = deeptrace.bind(req, res)
+    req[cfg.key] = deeptrace.bind(req, res)
     next()
   }
 }
