@@ -20,7 +20,7 @@ app.use(
 app.use(DeepTrace.middleware())
 
 app.get('/', rescue(async (req, res, next) => {
-  await req.$reporter.propagate(headers => {
+  await req.$deeptrace.propagate(headers => {
     return caller(process.env.CHILD_URL, headers)
   })
 

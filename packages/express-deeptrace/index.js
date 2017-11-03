@@ -206,6 +206,7 @@ const config = {
   factory: (options) => require('lodash.merge')({
     endpoint: env.get('DEEPTRACE_ENDPOINT'),
     secret: env.get('DEEPTRACE_SECRET'),
+    key: '$deeptrace',
     headers: {
       id: env.get('DEEPTRACE_HEADERS_ID', 'DeepTrace-Id'),
       parentId: env.get('DEEPTRACE_HEADERS_PARENT_ID', 'DeepTrace-Parent-Id'),
@@ -229,10 +230,11 @@ const factory = (options = {}) => {
  * @return {Function}       Middleware function.
  */
 const middleware = (options = {}) => {
-  const deeptrace = factory(options)
+  options = config.factory(options)
+  const deeptrace = new DeepTrace(options)
 
   return (req, res, next) => {
-    req.$reporter = deeptrace.bind(req, res)
+    req[options.key] = deeptrace.bind(req, res)
     next()
   }
 }

@@ -14,7 +14,7 @@ module.exports = {
     watch: true,
     ignore_watch: ['logs/'],
     env: {
-      "CHILD_URL": "http://localhost:3002/?foo=bar",
+      "CHILD_URL": "http://localhost:3002/?",
       "DEEPTRACE_ENDPOINT": "http://localhost:4000/",
       "DEEPTRACE_SECRET": "xxxxx.yyyyy.zzzzz",
       "NODE_ENV": "development",
@@ -26,7 +26,7 @@ module.exports = {
     watch: true,
     ignore_watch: ['logs/'],
     env: {
-      "CHILD_URL": "http://localhost:3003/?bar=baz",
+      "CHILD_URL": "http://localhost:3003/",
       "DEEPTRACE_ENDPOINT": "http://localhost:4000/",
       "DEEPTRACE_SECRET": "xxxxx.yyyyy.zzzzz",
       "NODE_ENV": "development",
@@ -38,7 +38,7 @@ module.exports = {
     watch: true,
     ignore_watch: ['logs/'],
     env: {
-      "CHILD_URL": "http://localhost:3004/?baz=foo",
+      "CHILD_URL": "http://localhost:3004/",
       "DEEPTRACE_ENDPOINT": "http://localhost:4000/",
       "DEEPTRACE_SECRET": "xxxxx.yyyyy.zzzzz",
       "NODE_ENV": "development",
