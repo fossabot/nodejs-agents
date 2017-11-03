@@ -6,5 +6,4 @@ You can find more information about it at [https://deeptrace.github.io](https://
 
 ## Sumary
 
-- [**deeptrace**](https://github.com/deep-trace/nodejs-plugins/tree/master/packages/deep-trace): core module;
 - [**express-deeptrace**](https://github.com/deep-trace/nodejs-plugins/tree/master/packages/express-deeptrace): expressjs middleware and helpers;

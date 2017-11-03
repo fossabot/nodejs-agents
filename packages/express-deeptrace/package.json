@@ -1,7 +1,7 @@
 {
   "name": "express-deeptrace",
   "version": "0.1.0",
-  "description": "DeepTrace's express middleware.",
+  "description": "DeepTrace's expressjs middleware.",
   "license": "MIT",
   "contributors": [
     "Rafael Willians <me@rwillians.com>"
@@ -14,8 +14,21 @@
   "bugs": {
     "url": "https://github.com/deep-trace/nodejs-plugins/issues"
   },
-  "homepage": "https://github.com/deep-trace/nodejs-plugins/tree/master/packages/express-deeptrace#readme",
+  "homepage": "https://github.com/deep-trace/nodejs-plugins/tree/master/packages/deep-trace#readme",
   "engines": [
     "node >= 7.6.0"
-  ]
+  ],
+  "devDependencies": {
+    "chai": "^4.1.2",
+    "chai-as-promised": "^7.1.1",
+    "mocha": "^4.0.1",
+    "sinon": "^4.1.0",
+    "sinon-chai": "^2.14.0"
+  },
+  "dependencies": {
+    "axios": "^0.17.0",
+    "express-interceptor": "^1.2.0",
+    "lodash.merge": "^4.6.0",
+    "uuid": "^3.1.0"
+  }
 }
