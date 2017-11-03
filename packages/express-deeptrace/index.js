@@ -55,13 +55,30 @@ const extract = {
 
     return { id, parentId, contextId}
   },
+  /**
+   * Extracts headers that should be exposed to the current request.
+   * @param  {Object} report  DeepTrace report object.
+   * @param  {Object} headers Configuration's headers mapping.
+   * @return {Object}         Exposable headers.
+   */
   exposable: (report, headers) => ({
     [headers.id]: report.id
   }),
+  /**
+   * Extracts headers that should be propagated to any request made.
+   * @param  {Object} report  DeepTrace report object.
+   * @param  {Object} headers Configuration's headers mapping.
+   * @return {Object}         Propagable headers.
+   */
   propagable: (report, headers) => ({
     [headers.parentId]: report.id,
     [headers.contextId]: report.contextId
   }),
+  /**
+   * Extracts relevant information about the current request.
+   * @param  {Request} req Request object.
+   * @return {Object}      Relevant information about the current request.
+   */
   request: (req) => ({
     ip: req.ip,
     method: req.method,
@@ -74,10 +91,16 @@ const extract = {
     headers: req.headers,
     body: req.body
   }),
+  /**
+   * Extracts relevant information about the current response.
+   * @param  {Response} req  Response object.
+   * @param  {String}   body Response's body.
+   * @return {Object}        Relevant information about the current response.
+   */
   response: (res, body) => ({
     status: res.statusCode,
     headers: res.header()._headers,
-    body: body
+    body
   })
 }
 

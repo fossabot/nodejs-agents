@@ -18,13 +18,6 @@
   "engines": [
     "node >= 7.6.0"
   ],
-  "devDependencies": {
-    "chai": "^4.1.2",
-    "chai-as-promised": "^7.1.1",
-    "mocha": "^4.0.1",
-    "sinon": "^4.1.0",
-    "sinon-chai": "^2.14.0"
-  },
   "dependencies": {
     "axios": "^0.17.0",
     "express-interceptor": "^1.2.0",
