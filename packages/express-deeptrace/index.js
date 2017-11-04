@@ -55,7 +55,7 @@ const extract = {
   identifiers: (req, headers) => {
     const id = uuid()
     // If no parent request id has been provided then use '' (empty) as default.
-    const parentId = req.header(headers.parentId) || ''
+    const parentId = req.header(headers.parentId) || null
     // If no request context id has been provided, use the request id as default.
     const contextId = req.header(headers.contextId) || id
 
