@@ -19,13 +19,11 @@ const axios = require('axios')
 const app = express()
 
 app.use(require('deep-trace').middleware({
-  endpoint: 'https://api.deep-trace.io/',
-  secret: 'xxxxx.yyyyy.zzzzz',
-  key: '$dp'
+  dsn: 'https://<APP>:<SECRET>@api.deeptrace.io/',
 }))
 
 app.get('/', async (req, res) => {
-  const response = await req.$dp.propagate(async (headers) => {
+  const response = await req.$deeptrace.propagate(async (headers) => {
     return axios.get('https://localhost:3000/users', { headers })
   })
 
