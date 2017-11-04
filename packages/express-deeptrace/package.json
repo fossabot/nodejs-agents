@@ -1,6 +1,6 @@
 {
   "name": "express-deeptrace",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "DeepTrace's expressjs middleware.",
   "keywords": [
     "expressjs",
