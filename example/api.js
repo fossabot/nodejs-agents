@@ -15,7 +15,7 @@ app.use(DeepTrace.middleware({ tags: { foo: 'bar' } }))
 
 app.use(
   require('./requests-logger')({
-    format: ':method :url :status :res[content-length] - :response-time ms'
+    format: ':method :url :status :res[content-length] - :response-time ms # :res[deeptrace-id]'
   }, process.env.NODE_ENV)
 )
 

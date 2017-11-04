@@ -63,22 +63,22 @@ const extract = {
   },
   /**
    * Extracts headers that should be exposed to the current request.
-   * @param  {Object} report  DeepTrace report object.
+   * @param  {Object} trace   DeepTrace report object.
    * @param  {Object} headers Configuration's headers mapping.
    * @return {Object}         Exposable headers.
    */
-  exposable: (report, headers) => ({
-    [headers.id]: report.id
+  exposable: (trace, headers) => ({
+    [headers.id]: trace.id
   }),
   /**
    * Extracts headers that should be propagated to any request made.
-   * @param  {Object} report  DeepTrace report object.
+   * @param  {Object} trace   DeepTrace trace object.
    * @param  {Object} headers Configuration's headers mapping.
    * @return {Object}         Propagable headers.
    */
-  propagable: (report, headers) => ({
-    [headers.parentId]: report.id,
-    [headers.contextId]: report.contextId
+  propagable: (trace, headers) => ({
+    [headers.parentId]: trace.id,
+    [headers.contextId]: trace.contextId
   }),
   /**
    * Extracts relevant information about the current request.
@@ -115,13 +115,17 @@ const agent = {
    * Sends the collected information to DeepTrace server.
    * @param  {String} endpoint DeepTrace server's API endpoint.
    * @param  {String} secret   Authentication token.
-   * @param  {Object} report   Collected information.
+   * @param  {Object} trace   C ollected information.
    * @return {Promise}         The request's promise.
    */
-  send: async (endpoint, secret, report) => {
-    return axios.post(endpoint, report, {
-      headers: { Authorization: `Bearer ${secret}` }
-    }).catch(err => { debug.agent(err) })
+  send: async (config, trace) => {
+    const errorHandler = (err) => {
+      debug.agent(err)
+      config.errorHandler(err)
+    }
+
+    axios.post(config.dsn, trace, { timeout: config.timeout })
+         .catch(errorHandler)
   }
 }
 
@@ -131,7 +135,10 @@ const agent = {
  * @return {Boolean}
  */
 const hasValidConfiguration = (config) => {
-  return !!config.endpoint && !!config.secret
+  const { dsn, headers = {} } = config
+  const { id, parentId, contextId } = headers
+
+  return (!!dsn && !!id && !!parentId && !!contextId)
 }
 
 /**
@@ -141,7 +148,7 @@ const hasValidConfiguration = (config) => {
  * @param {Response} res    Response object.
  */
 const Reporter = function Reporter (config, req, res) {
-  const report = Object.assign(
+  const trace = Object.assign(
     extract.identifiers(req, config.headers),
     { request: extract.request(req) },
     { response: {} },
@@ -149,23 +156,23 @@ const Reporter = function Reporter (config, req, res) {
     { startedAt: new Date(), finishedAt: null }
   )
 
-  res.set(extract.exposable(report, config.headers))
+  res.set(extract.exposable(trace, config.headers))
 
   intercept(res, (body) => {
-    report.response = extract.response(res, body)
-    report.finishedAt = new Date()
+    trace.response = extract.response(res, body)
+    trace.finishedAt = new Date()
 
-    if (hasValidConfiguration(config)) {
-      agent.send(config.endpoint, config.secret, report)
+    if (hasValidConfiguration(config) && config.shouldSendCallback(trace)) {
+      agent.send(config, trace)
     }
   })
 
   if (!hasValidConfiguration(config)) {
-    debug.middleware('Configurations are not properly setup.')
+    debug.middleware('Configurations are not properly setup: required dsn and headers.')
   }
 
   this.propagate = (fn) => {
-    const headers = extract.propagable(report, config.headers)
+    const headers = extract.propagable(trace, config.headers)
 
     if (fn) {
       return fn(headers)
@@ -213,19 +220,21 @@ const config = {
   *                           environment variables and custom options.
    */
   factory: (options) => _merge({
-    endpoint: env.get('DEEPTRACE_ENDPOINT'),
-    secret: env.get('DEEPTRACE_SECRET'),
     key: '$deeptrace',
-    headers: {
-      id: env.get('DEEPTRACE_HEADERS_ID', 'DeepTrace-Id'),
-      parentId: env.get('DEEPTRACE_HEADERS_PARENT_ID', 'DeepTrace-Parent-Id'),
-      contextId: env.get('DEEPTRACE_HEADERS_CONTEXT_ID', 'DeepTrace-Context-Id')
-    },
+    errorHandler: () => {},
+    dsn: env.get('DEEPTRACE_DSN'),
+    shouldSendCallback: (trace) => true,
+    timeout: parseInt(env.get('DEEPTRACE_TIMEOUT', 3000)),
     tags: {
       environment: env.get('NODE_ENV'),
       service: env.get('DEEPTRACE_SERVICE_NAME'),
       release: env.get('DEEPTRACE_RELEASE'),
       commit: env.get('DEEPTRACE_COMMIT')
+    },
+    headers: {
+      id: env.get('DEEPTRACE_HEADERS_ID', 'DeepTrace-Id'),
+      parentId: env.get('DEEPTRACE_HEADERS_PARENT_ID', 'DeepTrace-Parent-Id'),
+      contextId: env.get('DEEPTRACE_HEADERS_CONTEXT_ID', 'DeepTrace-Context-Id')
     }
   }, options)
 }
