@@ -2,6 +2,12 @@
   "name": "express-deeptrace",
   "version": "1.0.0",
   "description": "DeepTrace's expressjs middleware.",
+  "keywords": [
+    "expressjs",
+    "deep-trace",
+    "distributed",
+    "tracing",
+  ],
   "license": "MIT",
   "contributors": [
     "Rafael Willians <me@rwillians.com>"
