@@ -46,6 +46,23 @@ const intercept = (res, fn) => {
   }
 }
 
+/**
+ * Normalizes body to string.
+ * @param  {String|Body|null|undefined} body Request/Response body.
+ * @return {String}                          Normalized body.
+ */
+const normalizeBody = (body) => {
+  if (!body) {
+    return null
+  }
+
+  if (typeof body === 'string' || body instanceof String) {
+    return body
+  }
+
+  return JSON.stringify(body)
+}
+
 const extract = {
   /**
    * Generates unique request id and extracts relatives identifiers.
@@ -95,7 +112,7 @@ const extract = {
       pathname: req.originalUrl
     }),
     headers: req.headers,
-    body: req.body
+    body: normalizeBody(req.body)
   }),
   /**
    * Extracts relevant information about the current response.
@@ -106,7 +123,7 @@ const extract = {
   response: (res, body) => ({
     status: res.statusCode,
     headers: res.header()._headers,
-    body
+    body: normalizeBody(body)
   })
 }
 
