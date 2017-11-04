@@ -6,7 +6,7 @@
     "expressjs",
     "deep-trace",
     "distributed",
-    "tracing",
+    "tracing"
   ],
   "license": "MIT",
   "contributors": [
