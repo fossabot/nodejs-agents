@@ -179,14 +179,10 @@ const Reporter = function Reporter (config, req, res) {
     trace.response = extract.response(res, body)
     trace.finishedAt = new Date()
 
-    if (hasValidConfiguration(config) && config.shouldSendCallback(trace)) {
+    if (config.valid && config.shouldSendCallback(trace)) {
       agent.send(config, trace)
     }
   })
-
-  if (!hasValidConfiguration(config)) {
-    debug.middleware('Configurations are not properly setup.')
-  }
 
   this.propagate = (fn) => {
     const headers = extract.propagable(trace, config.headers)
@@ -204,6 +200,12 @@ const Reporter = function Reporter (config, req, res) {
  * @param {Object} config Configuration options.
  */
 const DeepTrace = function DeepTrace (config) {
+  config.valid = hasValidConfiguration(config)
+
+  if (!config.valid) {
+    debug.middleware('Configurations are not properly setup.')
+  }
+
   this.bind = (req, res) => {
     return new Reporter(config, req, res)
   }
