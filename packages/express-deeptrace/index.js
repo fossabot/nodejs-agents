@@ -179,14 +179,10 @@ const Reporter = function Reporter (config, req, res) {
     trace.response = extract.response(res, body)
     trace.finishedAt = new Date()
 
-    if (hasValidConfiguration(config) && config.shouldSendCallback(trace)) {
+    if (config.shouldSendCallback(trace)) {
       agent.send(config, trace)
     }
   })
-
-  if (!hasValidConfiguration(config)) {
-    debug.middleware('Configurations are not properly setup: required dsn and headers.')
-  }
 
   this.propagate = (fn) => {
     const headers = extract.propagable(trace, config.headers)
@@ -273,6 +269,12 @@ const factory = (options = {}) => {
 const middleware = (options = {}) => {
   const cfg = config.factory(options)
   const deeptrace = new DeepTrace(cfg)
+  
+  if (!hasValidConfiguration(config)) {
+    debug.middleware('Configurations are not properly setup: required dsn and headers.')
+    
+    return (req, res, next) => next()
+  }
 
   return (req, res, next) => {
     req[cfg.key] = deeptrace.bind(req, res)
