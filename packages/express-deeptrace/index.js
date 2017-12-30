@@ -179,10 +179,14 @@ const Reporter = function Reporter (config, req, res) {
     trace.response = extract.response(res, body)
     trace.finishedAt = new Date()
 
-    if (config.shouldSendCallback(trace)) {
+    if (hasValidConfiguration(config) && config.shouldSendCallback(trace)) {
       agent.send(config, trace)
     }
   })
+
+  if (!hasValidConfiguration(config)) {
+    debug.middleware('Configurations are not properly setup.')
+  }
 
   this.propagate = (fn) => {
     const headers = extract.propagable(trace, config.headers)
