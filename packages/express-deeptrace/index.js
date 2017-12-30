@@ -276,12 +276,6 @@ const middleware = (options = { }) => {
   const cfg = config.factory(options)
   const deeptrace = new DeepTrace(cfg)
 
-  if (!hasValidConfiguration(config)) {
-    debug.middleware('Configurations are not properly setup.')
-
-    return (req, res, next) => next()
-  }
-
   return (req, res, next) => {
     req[cfg.key] = deeptrace.bind(req, res)
     next()
