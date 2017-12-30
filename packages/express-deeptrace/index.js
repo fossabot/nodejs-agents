@@ -41,8 +41,8 @@ const intercept = (res, fn) => {
 
   res.end = (chunk, encoding, cb) => {
     chunks.push(normalized(chunk))
-    fn(Buffer.concat(chunks).toString('utf-8'))
     end.call(res, chunk, encoding, cb)
+    fn(Buffer.concat(chunks).toString('utf-8'))
   }
 }
 
