@@ -36,13 +36,13 @@ const intercept = (res, fn) => {
 
   res.write = (chunk, encoding) => {
     chunks.push(normalized(chunk))
-    write(res, chunk, encoding)
+    write.call(res, chunk, encoding)
   }
 
   res.end = (chunk, encoding, cb) => {
     chunks.push(normalized(chunk))
     fn(Buffer.concat(chunks).toString('utf-8'))
-    end(res, chunk, encoding, cb)
+    end.call(res, chunk, encoding, cb)
   }
 }
 
