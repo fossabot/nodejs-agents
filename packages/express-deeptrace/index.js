@@ -36,13 +36,13 @@ const intercept = (res, fn) => {
 
   res.write = (chunk, encoding) => {
     chunks.push(normalized(chunk))
-    write(res, chunk, encoding)
+    write.call(res, chunk, encoding)
   }
 
   res.end = (chunk, encoding, cb) => {
     chunks.push(normalized(chunk))
     fn(Buffer.concat(chunks).toString('utf-8'))
-    end(res, chunk, encoding, cb)
+    end.call(res, chunk, encoding, cb)
   }
 }
 
@@ -179,14 +179,10 @@ const Reporter = function Reporter (config, req, res) {
     trace.response = extract.response(res, body)
     trace.finishedAt = new Date()
 
-    if (hasValidConfiguration(config) && config.shouldSendCallback(trace)) {
+    if (config.valid && config.shouldSendCallback(trace)) {
       agent.send(config, trace)
     }
   })
-
-  if (!hasValidConfiguration(config)) {
-    debug.middleware('Configurations are not properly setup.')
-  }
 
   this.propagate = (fn) => {
     const headers = extract.propagable(trace, config.headers)
@@ -204,6 +200,12 @@ const Reporter = function Reporter (config, req, res) {
  * @param {Object} config Configuration options.
  */
 const DeepTrace = function DeepTrace (config) {
+  config.valid = hasValidConfiguration(config)
+
+  if (!config.valid) {
+    debug.middleware('Configurations are not properly setup.')
+  }
+
   this.bind = (req, res) => {
     return new Reporter(config, req, res)
   }
@@ -273,12 +275,6 @@ const factory = (options = { }) => {
 const middleware = (options = { }) => {
   const cfg = config.factory(options)
   const deeptrace = new DeepTrace(cfg)
-
-  if (!hasValidConfiguration(config)) {
-    debug.middleware('Configurations are not properly setup.')
-
-    return (req, res, next) => next()
-  }
 
   return (req, res, next) => {
     req[cfg.key] = deeptrace.bind(req, res)
