@@ -30,19 +30,19 @@ const intercept = (res, fn) => {
     }
 
     return encoding
-        ? new Buffer(chunk, encoding)
-        : new Buffer(chunk)
+        ? Buffer.from(chunk, encoding)
+        : Buffer.from(chunk)
   }
 
   res.write = (chunk, encoding) => {
-    chunks.push( normalized(chunk) )
-    write.call(res, chunk, encoding)
+    chunks.push(normalized(chunk))
+    write(res, chunk, encoding)
   }
 
   res.end = (chunk, encoding, cb) => {
-    chunks.push( normalized(chunk) )
-    fn( Buffer.concat(chunks).toString('utf-8') )
-    end.call(res, chunk, encoding, cb)
+    chunks.push(normalized(chunk))
+    fn(Buffer.concat(chunks).toString('utf-8'))
+    end(res, chunk, encoding, cb)
   }
 }
 
@@ -51,7 +51,7 @@ const intercept = (res, fn) => {
  * @param  {String|Body|null|undefined} body Request/Response body.
  * @return {String}                          Normalized body.
  */
-const normalizeBody = (body) => {
+const stringify = (body) => {
   if (!body) {
     return null
   }
@@ -76,7 +76,7 @@ const extract = {
     // If no request context id has been provided, use the request id as default.
     const contextId = req.header(headers.contextId) || id
 
-    return { id, parentId, contextId}
+    return { id, parentId, contextId }
   },
   /**
    * Extracts headers that should be exposed to the current request.
@@ -112,7 +112,7 @@ const extract = {
       pathname: req.originalUrl
     }),
     headers: req.headers,
-    body: normalizeBody(req.body)
+    body: stringify(req.body)
   }),
   /**
    * Extracts relevant information about the current response.
@@ -123,7 +123,7 @@ const extract = {
   response: (res, body) => ({
     status: res.statusCode,
     headers: res.header()._headers,
-    body: normalizeBody(body)
+    body: stringify(body)
   })
 }
 
@@ -141,8 +141,8 @@ const agent = {
       config.errorHandler(err)
     }
 
-    axios.post(config.dsn, trace, { timeout: config.timeout })
-         .catch(errorHandler)
+    return axios.post(config.dsn, trace, { timeout: config.timeout })
+                .catch(errorHandler)
   }
 }
 
@@ -152,7 +152,7 @@ const agent = {
  * @return {Boolean}
  */
 const hasValidConfiguration = (config) => {
-  const { dsn, headers = {} } = config
+  const { dsn, headers = { } } = config
   const { id, parentId, contextId } = headers
 
   return (!!dsn && !!id && !!parentId && !!contextId)
@@ -179,14 +179,10 @@ const Reporter = function Reporter (config, req, res) {
     trace.response = extract.response(res, body)
     trace.finishedAt = new Date()
 
-    if (hasValidConfiguration(config) && config.shouldSendCallback(trace)) {
+    if (config.shouldSendCallback(trace)) {
       agent.send(config, trace)
     }
   })
-
-  if (!hasValidConfiguration(config)) {
-    debug.middleware('Configurations are not properly setup: required dsn and headers.')
-  }
 
   this.propagate = (fn) => {
     const headers = extract.propagable(trace, config.headers)
@@ -261,7 +257,7 @@ const config = {
  * @param  {Object}     options Custom configuration options.
  * @return {DeepTrace}          DeepTrace instance.
  */
-const factory = (options = {}) => {
+const factory = (options = { }) => {
   return new DeepTrace(config.factory(options))
 }
 
@@ -270,9 +266,15 @@ const factory = (options = {}) => {
  * @param  {Object} options Custom configuration options.
  * @return {Function}       Middleware function.
  */
-const middleware = (options = {}) => {
+const middleware = (options = { }) => {
   const cfg = config.factory(options)
   const deeptrace = new DeepTrace(cfg)
+
+  if (!hasValidConfiguration(config)) {
+    debug.middleware('Configurations are not properly setup.')
+
+    return (req, res, next) => next()
+  }
 
   return (req, res, next) => {
     req[cfg.key] = deeptrace.bind(req, res)
