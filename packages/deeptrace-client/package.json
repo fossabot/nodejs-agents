@@ -1,12 +1,12 @@
 {
-  "name": "express-deeptrace",
-  "version": "1.0.11",
-  "description": "DeepTrace's expressjs middleware.",
+  "name": "deeptrace-client",
+  "version": "1.0.0",
+  "description": "DeepTrace client",
   "keywords": [
-    "expressjs",
     "deep-trace",
     "distributed",
-    "tracing"
+    "tracing",
+    "client"
   ],
   "license": "MIT",
   "contributors": [
@@ -20,11 +20,8 @@
   "bugs": {
     "url": "https://github.com/deep-trace/nodejs-plugins/issues"
   },
-  "homepage": "https://github.com/deep-trace/nodejs-plugins/tree/master/packages/express-deeptrace#readme",
+  "homepage": "https://github.com/deep-trace/nodejs-plugins/tree/master/packages/deeptrace-client#readme",
   "engines": [
     "node >= 7.6.0"
-  ],
-  "dependencies": {
-
-  }
+  ]
 }
