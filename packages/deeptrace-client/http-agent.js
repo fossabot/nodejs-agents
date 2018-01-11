@@ -65,7 +65,7 @@ const DeepTraceAgent = function DeepTraceAgent ({ dsn, timeout = 3000 } = { }) {
   const parsedDsn = url.parse(config.dsn)
 
   const baseRequestOptions = {
-    agent: new http.Agent({ keepAlive: true, maxSockets: 1 }),
+    agent: new http.Agent({ keepAlive: true, maxSockets: 2 }),
     auth: parsedDsn.username && parsedDsn.password
       ? `${parsedDsn.username}:${parsedDsn.password}`
       : undefined,
