@@ -1,9 +1,10 @@
 'use strict'
 
 const url = require('url')
-const axios = require('axios')
 const uuid = require('uuid/v4')
 const _merge = require('lodash.merge')
+const DeeptraceClient = require('deeptrace-client')
+
 const debug = {
   agent: require('debug')('deeptrace:agent'),
   middleware: require('debug')('deeptrace:middleware')
@@ -127,7 +128,7 @@ const extract = {
   })
 }
 
-const agent = {
+const client = (agent) => ({
   /**
    * Sends the collected information to DeepTrace server.
    * @param  {String} endpoint DeepTrace server's API endpoint.
@@ -141,10 +142,10 @@ const agent = {
       config.errorHandler(err)
     }
 
-    return axios.post(config.dsn, trace, { timeout: config.timeout })
-                .catch(errorHandler)
+    return agent.traces().create(trace)
+                         .catch(errorHandler)
   }
-}
+})
 
 /**
  * Checks if base configuration were properly set.
@@ -164,7 +165,7 @@ const hasValidConfiguration = (config) => {
  * @param {Request}  req    Request object.
  * @param {Response} res    Response object.
  */
-const Reporter = function Reporter (config, req, res) {
+const Reporter = function Reporter (agent, config, req, res) {
   const trace = Object.assign(
     extract.identifiers(req, config.headers),
     { request: extract.request(req) },
@@ -180,7 +181,7 @@ const Reporter = function Reporter (config, req, res) {
     trace.finishedAt = new Date()
 
     if (config.valid && config.shouldSendCallback(trace)) {
-      agent.send(config, trace)
+      client(agent).send(config, trace)
     }
   })
 
@@ -206,8 +207,10 @@ const DeepTrace = function DeepTrace (config) {
     debug.middleware('Configurations are not properly setup.')
   }
 
+  const agent = new DeeptraceClient(config.dsn, { timeout: config.timeout })
+
   this.bind = (req, res) => {
-    return new Reporter(config, req, res)
+    return new Reporter(agent, config, req, res)
   }
 }
 

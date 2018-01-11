@@ -58,11 +58,10 @@ const api = (agent) => ({
  * DeepTrace client
  */
 
-const DeepTraceClient = function DeepTraceClient (dsn, options = { }) {
+const DeepTraceClient = function DeepTraceClient (dsn, { timeout } = { }) {
   const agent = new DeepTraceAgent({
     dsn: dsn || process.env.DEEPTRACE_DSN,
-    timeout: parseInt(options.timeout || process.env.DEEPTRACE_TIMEOUT || 3) * 1000,
-    headers: options.headers || { }
+    timeout: parseInt(timeout || process.env.DEEPTRACE_TIMEOUT || 3000)
   })
 
   this.traces = () => ({

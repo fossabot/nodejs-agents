@@ -60,8 +60,8 @@ const response = (fn) => (res) => {
   })
 }
 
-const DeepTraceAgent = function DeepTraceAgent ({ dsn, headers = { }, timeout = 3000 } = { }) {
-  const config = { dsn, headers, timeout }
+const DeepTraceAgent = function DeepTraceAgent ({ dsn, timeout = 3000 } = { }) {
+  const config = { dsn, timeout }
   const parsedDsn = url.parse(config.dsn)
 
   const baseRequestOptions = {
@@ -69,7 +69,6 @@ const DeepTraceAgent = function DeepTraceAgent ({ dsn, headers = { }, timeout = 
     auth: parsedDsn.username && parsedDsn.password
       ? `${parsedDsn.username}:${parsedDsn.password}`
       : undefined,
-    headers: config.headers,
     protocol: parsedDsn.protocol,
     hostname: parsedDsn.hostname,
     port: parsedDsn.port
@@ -83,7 +82,6 @@ const DeepTraceAgent = function DeepTraceAgent ({ dsn, headers = { }, timeout = 
         path: path + (searchParams.keys().length > 0 ? `?${searchParams}` : ''),
         headers: Object.assign(
           { 'Content-Length': Buffer.byteLength(body) },
-          baseRequestOptions.headers,
           headers
         )
       })
