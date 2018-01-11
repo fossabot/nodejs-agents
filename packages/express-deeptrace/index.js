@@ -2,7 +2,7 @@
 
 const url = require('url')
 const uuid = require('uuid/v4')
-const _merge = require('lodash.merge')
+const merge = require('lodash.merge')
 const DeeptraceClient = require('deeptrace-client')
 
 const debug = {
@@ -241,7 +241,7 @@ const config = {
    * @return {Object}         Object created from merging default options,
   *                           environment variables and custom options.
    */
-  factory: (options) => _merge({
+  factory: (options) => merge({
     key: '$deeptrace',
     errorHandler: () => {},
     dsn: env.get('DEEPTRACE_DSN'),
