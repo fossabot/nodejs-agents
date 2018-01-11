@@ -25,6 +25,7 @@
     "node >= 7.6.0"
   ],
   "dependencies": {
+    "deeptrace-client": "^1.0.1",
     "lodash.merge": "^4.6.0",
     "uuid": "^3.1.0"
   }
