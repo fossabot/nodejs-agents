@@ -207,7 +207,10 @@ const DeepTrace = function DeepTrace (config) {
     debug.middleware('Configurations are not properly setup.')
   }
 
-  const agent = new DeeptraceClient(config.dsn, { timeout: config.timeout })
+  // I have a bad feeling about this.
+  const agent = config.valid
+    ? new DeeptraceClient(config.dsn, { timeout: config.timeout })
+    : null
 
   this.bind = (req, res) => {
     return new Reporter(agent, config, req, res)
