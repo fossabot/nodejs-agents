@@ -30,7 +30,7 @@ class HttpError extends DeepTraceAgentError {
 }
 
 const parseBody = (contentType, raw) => {
-  if (contentType.match('application/json')) {
+  if (contentType && contentType.match('application/json')) {
     return JSON.parse(raw)
   }
 
