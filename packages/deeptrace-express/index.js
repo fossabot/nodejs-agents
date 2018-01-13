@@ -36,12 +36,12 @@ const intercept = (res, fn) => {
   }
 
   res.write = (chunk, encoding) => {
-    chunks.push(normalized(chunk))
+    chunks.push(normalized(chunk, encoding))
     write.call(res, chunk, encoding)
   }
 
   res.end = (chunk, encoding, cb) => {
-    chunks.push(normalized(chunk))
+    chunks.push(normalized(chunk, encoding))
     fn(Buffer.concat(chunks).toString('utf-8'))
     end.call(res, chunk, encoding, cb)
   }
@@ -180,7 +180,7 @@ const Reporter = function Reporter (agent, config, req, res) {
     trace.response = extract.response(res, body)
     trace.finishedAt = new Date()
 
-    if (config.valid && config.shouldSendCallback(trace)) {
+    if (config.valid && config.shouldSendCallback(trace, config)) {
       client(agent).send(config, trace)
     }
   })
@@ -248,7 +248,7 @@ const config = {
     key: '$deeptrace',
     errorHandler: () => {},
     dsn: env.get('DEEPTRACE_DSN'),
-    shouldSendCallback: (trace) => true,
+    shouldSendCallback: (trace, config) => true,
     timeout: parseInt(env.get('DEEPTRACE_TIMEOUT', 3000)),
     tags: {
       environment: env.get('NODE_ENV'),
