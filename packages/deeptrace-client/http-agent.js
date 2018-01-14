@@ -95,6 +95,7 @@ const DeepTraceAgent = function DeepTraceAgent ({ dsn, timeout = 3000 } = { }) {
       }))
 
       req.setTimeout(config.timeout, () => {
+        req.abort()
         reject(new Timeout(req))
       })
 
