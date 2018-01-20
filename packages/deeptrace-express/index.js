@@ -190,14 +190,18 @@ const Reporter = function Reporter (agent, config, req, res) {
     }
   })
 
+  this.id = trace.id
+  this.parentId = trace.parentId
+  this.contextId = trace.contextId
+
   this.propagate = (fn) => {
     const headers = extract.propagable(trace, config.headers)
 
-    if (fn) {
-      return fn(headers)
+    if (!fn) {
+      return headers
     }
 
-    return headers
+    return fn(headers)
   }
 }
 
