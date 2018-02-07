@@ -2,8 +2,12 @@
 
 const url = require('url')
 const uuid = require('uuid/v4')
+const { format } = require('util')
 const merge = require('lodash.merge')
 const DeeptraceClient = require('deeptrace-client')
+
+const MSG_SUCCESSFUL_REPORT = 'report %s :: success'
+const MSG_FAILED_REPORT = 'report %s :: failed'
 
 const debug = {
   agent: require('debug')('deeptrace:agent'),
@@ -143,12 +147,14 @@ const client = (agent) => ({
    */
   send: async (config, trace) => {
     const errorHandler = (err) => {
-      debug.agent(err)
+      debug.agent(format(MSG_FAILED_REPORT, trace.id))
       config.errorHandler(err)
     }
 
-    return agent.traces().create(trace)
-                         .catch(errorHandler)
+    return agent.traces()
+                .create(trace)
+                .then(() => { debug.agent(format(MSG_SUCCESSFUL_REPORT, trace.id)) })
+                .catch(errorHandler)
   }
 })
 
@@ -164,37 +170,50 @@ const hasValidConfiguration = (config) => {
   return (!!dsn && !!id && !!parentId && !!contextId)
 }
 
-/**
- * DeepTrace Request/Response reporter.
- * @param {Object}   config Configuration options.
- * @param {Request}  req    Request object.
- * @param {Response} res    Response object.
- */
-const Reporter = function Reporter (agent, config, req, res) {
-  const trace = Object.assign(
-    extract.identifiers(req, config.headers),
-    { request: extract.request(req) },
-    { response: {} },
-    { tags: config.tags },
-    { startedAt: new Date(), finishedAt: null }
-  )
+class Reporter {
+  /**
+   * @param {Http.Agent}  agent   Http agent instance.
+   * @param {Object}      config  Configuration options.
+   * @param {Request}     req     Request object.
+   * @param {Response}    res     Response object.
+   */
+  constructor (agent, config, req, res) {
+    const trace = Object.assign(
+      extract.identifiers(req, config.headers),
+      { request: extract.request(req) },
+      { response: {} },
+      { tags: config.tags },
+      { startedAt: new Date(), finishedAt: null }
+    )
 
-  res.set(extract.exposable(trace, config.headers))
+    res.set(extract.exposable(trace, config.headers))
 
-  intercept(res, (body) => {
-    trace.response = extract.response(res, body)
-    trace.finishedAt = new Date()
+    intercept(res, (body) => {
+      trace.response = extract.response(res, body)
+      trace.finishedAt = new Date()
 
-    if (config.valid && config.shouldSendCallback(trace, config)) {
-      client(agent).send(config, trace)
-    }
-  })
+      if (config.valid && config.shouldSendCallback(trace, config)) {
+        client(agent).send(config, trace)
+      }
+    })
 
-  this.id = trace.id
-  this.parentId = trace.parentId
-  this.contextId = trace.contextId
+    this.$trace = trace
+    this.$config = config
+  }
 
-  this.propagate = (fn) => {
+  get id () {
+    return this.$trace.id
+  }
+
+  get parentId () {
+    return this.$trace.parentId
+  }
+
+  get contextId () {
+    return this.$contextId
+  }
+
+  context (fn) {
     const headers = extract.propagable(trace, config.headers)
 
     if (!fn) {
@@ -254,13 +273,13 @@ const config = {
   *                           environment variables and custom options.
    */
   factory: (options) => merge({
-    key: '$deeptrace',
+    key: 'deeptrace',
     errorHandler: () => {},
     dsn: env.get('DEEPTRACE_DSN'),
     shouldSendCallback: (trace, config) => true,
     timeout: parseInt(env.get('DEEPTRACE_TIMEOUT', 3000)),
     tags: {
-      environment: env.get('NODE_ENV'),
+      environment: env.current,
       service: env.get('DEEPTRACE_SERVICE_NAME'),
       release: env.get('DEEPTRACE_RELEASE'),
       commit: env.get('DEEPTRACE_COMMIT')

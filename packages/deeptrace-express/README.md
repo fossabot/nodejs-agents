@@ -23,7 +23,7 @@ app.use(require('deep-trace').middleware({
 }))
 
 app.get('/', async (req, res) => {
-  const response = await req.$deeptrace.propagate(async (headers) => {
+  const response = await req.deeptrace.context(async (headers) => {
     return axios.get('https://localhost:3000/users', { headers })
   })
 
