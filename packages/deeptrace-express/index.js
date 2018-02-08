@@ -214,7 +214,7 @@ class Reporter {
   }
 
   context (fn) {
-    const headers = extract.propagable(trace, config.headers)
+    const headers = extract.propagable(this.$trace, this.$config.headers)
 
     if (!fn) {
       return headers
