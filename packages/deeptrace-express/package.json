@@ -1,6 +1,6 @@
 {
   "name": "deeptrace-express",
-  "version": "1.2.0",
+  "version": "1.2.1",
   "description": "DeepTrace's expressjs middleware.",
   "keywords": [
     "expressjs",
@@ -25,7 +25,7 @@
     "node >= 7.6.0"
   ],
   "dependencies": {
-    "deeptrace-client": "^1.0.5",
+    "deeptrace-client": "^1.0.6",
     "lodash.merge": "^4.6.0",
     "uuid": "^3.1.0"
   }

@@ -99,7 +99,7 @@ const DeepTraceAgent = function DeepTraceAgent ({ dsn, timeout = 3000 } = { }) {
         reject(new Timeout(req))
       })
 
-      req.on('err', (err) => {
+      req.on('error', (err) => {
         reject(new DeepTraceAgentError(err.message, err.stack))
       })
 
