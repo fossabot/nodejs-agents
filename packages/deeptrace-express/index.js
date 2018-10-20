@@ -210,7 +210,7 @@ class Reporter {
   }
 
   get contextId () {
-    return this.$contextId
+    return this.$trace.contextId
   }
 
   context (fn) {
