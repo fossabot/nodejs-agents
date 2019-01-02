@@ -1,6 +1,6 @@
 {
   "name": "@deep-trace/express-agent",
-  "version": "1.3.1",
+  "version": "1.3.2",
   "description": "DeepTrace's expressjs agent.",
   "keywords": [
     "deep-trace",
@@ -25,7 +25,7 @@
     "node >= 7.6.0"
   ],
   "dependencies": {
-    "@deep-trace/client": "^1.3.1",
+    "@deep-trace/client": "^1.3.2",
     "debug": "^3.1.0",
     "lodash.merge": "^4.6.0",
     "uuid": "^3.1.0"
