@@ -48,7 +48,7 @@ const api = (agent) => ({
   createTrace: async (trace) => {
     const options = { headers: { 'Content-Type': 'application/json' } }
 
-    return agent.post('/', JSON.stringify(trace), options)
+    return agent.post('/v1/traces', JSON.stringify(trace), options)
                 .then(() => trace)
                 .catch(customErrors)
   }

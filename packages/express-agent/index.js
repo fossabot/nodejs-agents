@@ -4,14 +4,14 @@ const url = require('url')
 const uuid = require('uuid/v4')
 const { format } = require('util')
 const merge = require('lodash.merge')
-const DeeptraceClient = require('deeptrace-client')
+const DeeptraceClient = require('@deep-trace/client')
 
 const MSG_SUCCESSFUL_REPORT = 'report %s :: success'
 const MSG_FAILED_REPORT = 'report %s :: failed'
 
 const debug = {
-  agent: require('debug')('deeptrace:agent'),
-  middleware: require('debug')('deeptrace:middleware')
+  agent: require('debug')('deep-trace:agent'),
+  middleware: require('debug')('deep-trace:middleware')
 }
 
 /**
@@ -82,11 +82,11 @@ const extract = {
   identifiers: (req, headers) => {
     const id = uuid()
     // If no parent request id has been provided then use '' (empty) as default.
-    const parentId = req.header(headers.parentId) || null
+    const parentid = req.header(headers.parentid) || null
     // If no request context id has been provided, use the request id as default.
-    const contextId = req.header(headers.contextId) || id
+    const rootid = req.header(headers.rootid) || id
 
-    return { id, parentId, contextId }
+    return { id, parentid, rootid }
   },
   /**
    * Extracts headers that should be exposed to the current request.
@@ -104,8 +104,8 @@ const extract = {
    * @return {Object}         Propagable headers.
    */
   propagable: (trace, headers) => ({
-    [headers.parentId]: trace.id,
-    [headers.contextId]: trace.contextId
+    [headers.parentid]: trace.id,
+    [headers.rootid]: trace.rootid
   }),
   /**
    * Extracts relevant information about the current request.
@@ -115,7 +115,7 @@ const extract = {
   request: (req) => ({
     ip: req.ip,
     method: req.method,
-    url: url.format({
+    uri: url.format({
       protocol: req.protocol,
       host: req.get('host'),
       port: req.port,
@@ -165,9 +165,9 @@ const client = (agent) => ({
  */
 const hasValidConfiguration = (config) => {
   const { dsn, headers = { } } = config
-  const { id, parentId, contextId } = headers
+  const { id, parentid, rootid } = headers
 
-  return (!!dsn && !!id && !!parentId && !!contextId)
+  return (!!dsn && !!id && !!parentid && !!rootid)
 }
 
 class Reporter {
@@ -180,41 +180,42 @@ class Reporter {
   constructor (agent, config, req, res) {
     const trace = Object.assign(
       extract.identifiers(req, config.headers),
-      { request: extract.request(req) },
-      { response: {} },
-      { tags: config.tags },
-      { startedAt: new Date(), finishedAt: null }
+      { request: { ...extract.request(req), timestamp: new Date() } },
+      { response: { } },
+      { tags: config.tags }
     )
 
     res.set(extract.exposable(trace, config.headers))
 
     intercept(res, (body) => {
-      trace.response = extract.response(res, body)
-      trace.finishedAt = new Date()
+      trace.response = {
+        ...extract.response(res, body),
+        timestamp: new Date()
+      }
 
       if (config.valid && config.shouldSendCallback(trace, config)) {
         client(agent).send(config, trace)
       }
     })
 
-    this.$trace = trace
-    this.$config = config
+    this.__trace = trace
+    this.__config = config
   }
 
   get id () {
-    return this.$trace.id
+    return this.__trace.id
   }
 
-  get parentId () {
-    return this.$trace.parentId
+  get parentid () {
+    return this.__trace.parentid
   }
 
-  get contextId () {
-    return this.$trace.contextId
+  get rootid () {
+    return this.__trace.rootid
   }
 
   context (fn) {
-    const headers = extract.propagable(this.$trace, this.$config.headers)
+    const headers = extract.propagable(this.__trace, this.__config.headers)
 
     if (!fn) {
       return headers
@@ -286,8 +287,8 @@ const config = {
     },
     headers: {
       id: env.get('DEEPTRACE_HEADERS_ID', 'DeepTrace-Id'),
-      parentId: env.get('DEEPTRACE_HEADERS_PARENT_ID', 'DeepTrace-Parent-Id'),
-      contextId: env.get('DEEPTRACE_HEADERS_CONTEXT_ID', 'DeepTrace-Context-Id')
+      parentid: env.get('DEEPTRACE_HEADERS_PARENT_ID', 'DeepTrace-Parent-Id'),
+      rootid: env.get('DEEPTRACE_HEADERS_ROOT_ID', 'DeepTrace-Root-Id')
     }
   }, options)
 }
