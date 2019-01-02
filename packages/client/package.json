@@ -21,5 +21,6 @@
   "homepage": "https://github.com/deep-trace/nodejs-plugins/tree/master/packages/deeptrace-client#readme",
   "engines": [
     "node >= 7.6.0"
-  ]
+  ],
+  "gitHead": "422ddc686950a2f4d30bac07bfa3e2fc499b6805"
 }
