@@ -25,9 +25,10 @@
     "node >= 7.6.0"
   ],
   "dependencies": {
+    "@deep-trace/client": "^1.3.1",
     "debug": "^3.1.0",
-    "deeptrace-client": "^1.0.6",
     "lodash.merge": "^4.6.0",
     "uuid": "^3.1.0"
-  }
+  },
+  "gitHead": "422ddc686950a2f4d30bac07bfa3e2fc499b6805"
 }
