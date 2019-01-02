@@ -66,6 +66,10 @@ const stringify = (body) => {
     return null
   }
 
+  if (typeof body === 'object' && Object.keys(body).length === 0) {
+    return null
+  }
+
   if (typeof body === 'string' || body instanceof String) {
     return body
   }
@@ -81,9 +85,7 @@ const extract = {
    */
   identifiers: (req, headers) => {
     const id = uuid()
-    // If no parent request id has been provided then use '' (empty) as default.
     const parentid = req.header(headers.parentid) || null
-    // If no request context id has been provided, use the request id as default.
     const rootid = req.header(headers.rootid) || id
 
     return { id, parentid, rootid }
